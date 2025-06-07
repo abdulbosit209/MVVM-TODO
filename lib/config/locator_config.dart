@@ -32,27 +32,3 @@ void setup() {
   );
 }
 
-// final modules = [
-//   Module<RouterService>(
-//     builder: () => RouterService(supportedRoutes: routes),
-//     lazy: false,
-//   ),
-//   Module<NotifyService>(builder: () => NotifyService(), lazy: false),
-//   Module(builder: () => SharedPreferencesAbstraction(), lazy: false),
-//   Module<HttpAbstraction>(
-//     builder:
-//         () => HttpAbstraction(
-//           interceptors: [LoggingInterceptor(logBody: !kReleaseMode)],
-//         ),
-//     lazy: true,
-//   ),
-//   Module<TodosRepository>(
-//     builder:
-//         () => TodosRepository(
-//           todosApi: LocalStorageTodosApi(
-//             plugin: locator<SharedPreferencesAbstraction>().prefs,
-//           ),
-//         ),
-//     lazy: true,
-//   ),
-// ];

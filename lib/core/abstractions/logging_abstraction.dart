@@ -7,7 +7,7 @@ class LoggingAbstraction {
   StreamSubscription<LogRecord> initializeLogging({
     List<Function(LogRecord)>? onLogs,
   }) {
-    Logger.root.level = Level.ALL; // Adjust this based on your needs
+    Logger.root.level = Level.ALL;
 
     return Logger.root.onRecord.listen((record) {
       if (!kReleaseMode) {
