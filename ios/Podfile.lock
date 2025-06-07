@@ -1,0 +1,36 @@
+PODS:
+  - cupertino_http (0.0.1):
+    - Flutter
+    - FlutterMacOS
+  - Flutter (1.0.0)
+  - objective_c (0.0.1):
+    - Flutter
+  - shared_preferences_foundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
+
+DEPENDENCIES:
+  - cupertino_http (from `.symlinks/plugins/cupertino_http/darwin`)
+  - Flutter (from `Flutter`)
+  - objective_c (from `.symlinks/plugins/objective_c/ios`)
+  - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
+
+EXTERNAL SOURCES:
+  cupertino_http:
+    :path: ".symlinks/plugins/cupertino_http/darwin"
+  Flutter:
+    :path: Flutter
+  objective_c:
+    :path: ".symlinks/plugins/objective_c/ios"
+  shared_preferences_foundation:
+    :path: ".symlinks/plugins/shared_preferences_foundation/darwin"
+
+SPEC CHECKSUMS:
+  cupertino_http: 947a233f40cfea55167a49f2facc18434ea117ba
+  Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
+  objective_c: 77e887b5ba1827970907e10e832eec1683f3431d
+  shared_preferences_foundation: fcdcbc04712aee1108ac7fda236f363274528f78
+
+PODFILE CHECKSUM: 251cb053df7158f337c0712f2ab29f4e0fa474ce
+
+COCOAPODS: 1.16.2

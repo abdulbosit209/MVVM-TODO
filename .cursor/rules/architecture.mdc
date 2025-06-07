@@ -1,0 +1,64 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Project Structure and Guidelines
+
+## Architecture Overview
+- Follow the MVVM (Model-View-ViewModel)
+- Use ValueNotifier for state management, these are always created within a viewmodel
+- Services handle app-wide state, only needed if you need to share state between viewmodels, they should be instantiated in the locator.
+- ViewModels handle page-specific state and logic
+- Views only contain UI code other functionality related to context
+
+Example of a view using a viewmodel:
+
+```dart
+class HomeView extends StatefulWidget {
+  const HomeView({super.key});
+
+  @override
+  State<HomeView> createState() => _HomeViewState();
+}
+
+class _HomeViewState extends State<HomeView> {
+  late final HomeViewModel _viewModel = HomeViewModel(
+    notifyService: locator<NotifyService>(),
+  );
+
+  @override
+  void dispose() {
+    _viewModel.dispose();
+    super.dispose();
+  }
+
+  // build method
+}
+```
+
+## Directory Structure
+- `lib/`
+  - `config/`: configure routes and services
+  - `core/`
+    - `ui/`: plain widgets, should never take in viewmodels and other project specific inputs 
+    - `services/`: Shared services and business logic
+    - `utils/`: Helper functions, constants, and shared features such as navigation, http, translations
+  - `feature_name/`
+    - For simple features (≤5 files):
+      Place files directly in feature folder
+    - For complex features:
+      - `models/`: Feature-specific models
+      - `services/`: Feature-specific services
+      - `viewmodels/`: Feature-specific viewmodels
+      - `views/`: Feature UI components
+      - `repositories/`: (Optional) Feature-specific data layer
+
+## Architecture Rules - IMPORTANT
+1. Views should never use services directly, just view models.
+2. In theory, the view should contain no logic (this is not always possible) but defer logic to the view model as much as possible (that is its role)
+3. View models should never use other view models. Move that shared functionality into a service and consume it from there.
+4. View models should not have access to BuildContext. Defer to the view.
+5. Dependencies should always be injected through the constructor.
+6. ViewModels are responsible for cleaning up their own resources. Views should call the ViewModel's dispose method.
+7. ValueNotifiers and other resources should be disposed in the ViewModel's dispose method, not directly in the View.
