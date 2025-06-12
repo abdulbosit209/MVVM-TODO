@@ -15,7 +15,7 @@ class TodosOverviewOptionsButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder(
-      valueListenable: editTodoViewModel.todoOverViewState,
+      valueListenable: editTodoViewModel,
       builder: (context, state, _) {
         final hasTodos = state.todos.isNotEmpty;
         final completedTodosAmount =

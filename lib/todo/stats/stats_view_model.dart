@@ -1,8 +1,10 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:async';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
+
 import 'package:todo_project/core/models/todo.dart';
 import 'package:todo_project/core/utils/internal_notification/haptic_feedback/haptic_feedback_listener.dart';
 import 'package:todo_project/core/utils/internal_notification/notify_service.dart';
@@ -10,13 +12,14 @@ import 'package:todo_project/core/utils/internal_notification/toast/toast_event.
 import 'package:todo_project/core/utils/l10n/translate.dart';
 import 'package:todo_project/todo/todo_repository.dart';
 
-class StatsViewModel {
+class StatsViewModel extends ValueNotifier<StatsState> {
   StatsViewModel({
-    required TodosRepository todosRepository,
     required NotifyService notifyService,
-  }) : _notifyService = notifyService {
+    required TodosRepository todosRepository,
+  }) : _notifyService = notifyService,
+       super(const StatsState()) {
     _todoSubscription = todosRepository.getTodos().listen(
-      (event) => _statsSubscriptionRequested(event),
+      _statsChanged,
       onError: _displayErrorMessage,
     );
   }
@@ -24,17 +27,14 @@ class StatsViewModel {
   final NotifyService _notifyService;
   final _logger = Logger('$StatsViewModel');
   late final StreamSubscription<List<Todo>> _todoSubscription;
-  final ValueNotifier<StatsState> todoOverViewState = ValueNotifier<StatsState>(
-    StatsState(),
-  );
 
-  void _statsSubscriptionRequested(List<Todo> todos) {
-    _logger.info('StatsSubscriptionRequested');
-    todoOverViewState.value = todoOverViewState.value.copyWith(
+  void _statsChanged(List<Todo> todos) {
+    value = value.copyWith(
       completedTodos: todos.where((todo) => todo.isCompleted).length,
       activeTodos: todos.where((todo) => !todo.isCompleted).length,
       isLoading: false,
     );
+    _logger.info('StatsChanged $value');
   }
 
   void _displayErrorMessage(dynamic error) {
@@ -45,9 +45,10 @@ class StatsViewModel {
     _notifyService.setHapticFeedbackEvent(HapticFeedbackEvent.heavyImpact);
   }
 
+  @override
   void dispose() {
     _todoSubscription.cancel();
-    todoOverViewState.dispose();
+    super.dispose();
   }
 }
 
@@ -76,4 +77,13 @@ final class StatsState extends Equatable {
       activeTodos: activeTodos ?? this.activeTodos,
     );
   }
+
+
+  @override
+  String toString() => '''\n
+    StatsState(
+      isLoading: $isLoading, 
+      completedTodos: $completedTodos, 
+      activeTodos: $activeTodos
+    )''';
 }

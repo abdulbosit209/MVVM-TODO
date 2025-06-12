@@ -27,8 +27,8 @@ class _TodosOverviewPageState extends State<TodosOverviewPage> {
       todosRepository: locator<TodosRepository>(),
       notifyService: locator<NotifyService>(),
     );
-    _editTodoViewModel.todoOverViewState.addListener(() {
-      final state = _editTodoViewModel.todoOverViewState.value;
+    _editTodoViewModel.addListener(() {
+      final state = _editTodoViewModel.value;
       final deletedTodo = state.lastDeletedTodo;
       if (state.lastDeletedTodo != null) {
         final messenger = ScaffoldMessenger.of(context);
@@ -78,7 +78,7 @@ class TodosOverviewView extends StatelessWidget {
         ],
       ),
       body: ValueListenableBuilder(
-        valueListenable: editTodoViewModel.todoOverViewState,
+        valueListenable: editTodoViewModel,
         builder: (context, state, _) {
           return CupertinoScrollbar(
             child: ListView.builder(

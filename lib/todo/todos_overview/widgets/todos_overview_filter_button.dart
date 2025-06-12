@@ -9,7 +9,7 @@ class TodosOverviewFilterButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder(
-      valueListenable: editTodoViewModel.todoOverViewState,
+      valueListenable: editTodoViewModel,
       builder: (context, state, _) {
         return PopupMenuButton<TodosViewFilter>(
           shape: const ContinuousRectangleBorder(

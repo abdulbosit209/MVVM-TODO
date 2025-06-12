@@ -42,12 +42,12 @@ class EditTodoView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isNewTodo = editTodoViewModel.loginState.value.isNewTodo;
+    final isNewTodo = editTodoViewModel.value.isNewTodo;
 
     return Scaffold(
       appBar: AppBar(title: Text(isNewTodo ? 'New todo' : 'Edit todo')),
       floatingActionButton: ValueListenableBuilder(
-        valueListenable: editTodoViewModel.loginState,
+        valueListenable: editTodoViewModel,
         builder:
             (context, value, _) => FloatingActionButton(
               shape: const ContinuousRectangleBorder(
@@ -88,7 +88,7 @@ class _TitleField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder(
-      valueListenable: editTodoViewModel.loginState,
+      valueListenable: editTodoViewModel,
       builder: (context, state, _) {
         return TextFormField(
           key: const Key('editTodoView_title_textFormField'),
@@ -119,7 +119,7 @@ class _DescriptionField extends StatelessWidget {
   Widget build(BuildContext context) {
 
     return ValueListenableBuilder(
-      valueListenable: editTodoViewModel.loginState,
+      valueListenable: editTodoViewModel,
       builder: (context, state, _) {
         return TextFormField(
           key: const Key('editTodoView_description_textFormField'),

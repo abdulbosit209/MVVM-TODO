@@ -41,7 +41,7 @@ class StatsView extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text('Stats')),
       body: ValueListenableBuilder(
-        valueListenable: statsViewModel.todoOverViewState,
+        valueListenable: statsViewModel,
         builder: (context, value, _) {
           return Column(
             children: [
@@ -65,7 +65,7 @@ class StatsView extends StatelessWidget {
               ),
             ],
           );
-        }
+        },
       ),
     );
   }

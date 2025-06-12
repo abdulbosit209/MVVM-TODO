@@ -10,13 +10,14 @@ import 'package:todo_project/core/utils/internal_notification/toast/toast_event.
 import 'package:todo_project/core/utils/l10n/translate.dart';
 import 'package:todo_project/todo/todo_repository.dart';
 
-class TodosOverviewViewModel {
+class TodosOverviewViewModel extends ValueNotifier<TodosOverviewState> {
   TodosOverviewViewModel({
     required TodosRepository todosRepository,
     required NotifyService notifyService,
-  }) : _todosRepository = todosRepository,
-       _notifyService = notifyService {
-    todosRepository.getTodos().listen(
+  }) : _notifyService = notifyService,
+       _todosRepository = todosRepository,
+       super(const TodosOverviewState()) {
+    _todoSubscription = todosRepository.getTodos().listen(
       _todosOverviewSubscriptionRequested,
       onError: _displayErrorMessage,
     );
@@ -24,14 +25,12 @@ class TodosOverviewViewModel {
 
   final TodosRepository _todosRepository;
   final NotifyService _notifyService;
+  late final StreamSubscription<List<Todo>> _todoSubscription;
   final _logger = Logger('$TodosOverviewViewModel');
-
-  final ValueNotifier<TodosOverviewState> todoOverViewState =
-      ValueNotifier<TodosOverviewState>(TodosOverviewState());
 
   void _todosOverviewSubscriptionRequested(List<Todo> todos) {
     _logger.info('TodosOverviewSubscriptionRequested');
-    todoOverViewState.value = todoOverViewState.value.copyWith(
+    value = value.copyWith(
       todos: () => todos,
       isLoading: () => false,
     );
@@ -56,35 +55,29 @@ class TodosOverviewViewModel {
 
   Future<void> todosOverviewTodoDeleted({required Todo todo}) async {
     _logger.info('todosOverviewTodoDeleted');
-    todoOverViewState.value = todoOverViewState.value.copyWith(
-      lastDeletedTodo: () => todo,
-    );
+    value = value.copyWith(lastDeletedTodo: () => todo);
     await _todosRepository.deleteTodo(todo.id);
   }
 
   Future<void> todosOverviewUndoDeletionRequested() async {
     assert(
-      todoOverViewState.value.lastDeletedTodo != null,
+      value.lastDeletedTodo != null,
       'Last deleted todo can not be null.',
     );
     _logger.info('todosOverviewUndoDeletionRequested');
-    final todo = todoOverViewState.value.lastDeletedTodo!;
-    todoOverViewState.value = todoOverViewState.value.copyWith(
-      lastDeletedTodo: () => null,
-    );
+    final todo = value.lastDeletedTodo!;
+    value = value.copyWith(lastDeletedTodo: () => null);
     await _todosRepository.saveTodo(todo);
   }
 
   void todosOverviewFilterChanged({required TodosViewFilter filter}) {
     _logger.info('todosOverviewFilterChanged');
-    todoOverViewState.value = todoOverViewState.value.copyWith(
-      filter: () => filter,
-    );
+    value = value.copyWith(filter: () => filter);
   }
 
   Future<void> todosOverviewToggleAllRequested() async {
     _logger.info('todosOverviewToggleAllRequested');
-    final areAllCompleted = todoOverViewState.value.todos.every(
+    final areAllCompleted = value.todos.every(
       (todo) => todo.isCompleted,
     );
     await _todosRepository.completeAll(isCompleted: !areAllCompleted);
@@ -92,17 +85,20 @@ class TodosOverviewViewModel {
 
   Future<void> todosOverviewClearCompletedRequested() async {
     _logger.info('todosOverviewClearCompletedRequested');
-    final areAllCompleted = todoOverViewState.value.todos.every(
+    final areAllCompleted = value.todos.every(
       (todo) => todo.isCompleted,
     );
     await _todosRepository.completeAll(isCompleted: !areAllCompleted);
   }
 
+  @override
   void dispose() {
     _logger.info('disposed');
-    todoOverViewState.dispose();
+    _todoSubscription.cancel();
+    super.dispose();
   }
 }
+
 
 enum TodosViewFilter { all, activeOnly, completedOnly }
 
@@ -148,8 +144,9 @@ final class TodosOverviewState extends Equatable {
       isLoading: isLoading != null ? isLoading() : this.isLoading,
       todos: todos != null ? todos() : this.todos,
       filter: filter != null ? filter() : this.filter,
-      lastDeletedTodo:
-          lastDeletedTodo != null ? lastDeletedTodo() : this.lastDeletedTodo,
+      lastDeletedTodo: lastDeletedTodo != null
+          ? lastDeletedTodo()
+          : this.lastDeletedTodo,
     );
   }
 
