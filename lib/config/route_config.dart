@@ -5,7 +5,7 @@ import 'package:todo_project/not_found/not_found_view.dart';
 import 'package:todo_project/todo/edit_todo/edit_todo_view.dart';
 
 final routes = [
-  RouteEntry(path: '/', builder: (key, routeData) => const HomeView()),
+  RouteEntry(path: '/', builder: (key, routeData) => const HomePage()),
   RouteEntry(path: '/404', builder: (key, routeData) => const NotFoundView()),
   RouteEntry(
     path: '/editTodoPage',
