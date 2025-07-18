@@ -85,10 +85,7 @@ class TodosOverviewViewModel extends ValueNotifier<TodosOverviewState> {
 
   Future<void> todosOverviewClearCompletedRequested() async {
     _logger.info('todosOverviewClearCompletedRequested');
-    final areAllCompleted = value.todos.every(
-      (todo) => todo.isCompleted,
-    );
-    await _todosRepository.completeAll(isCompleted: !areAllCompleted);
+    await _todosRepository.clearCompleted();
   }
 
   @override
@@ -98,7 +95,6 @@ class TodosOverviewViewModel extends ValueNotifier<TodosOverviewState> {
     super.dispose();
   }
 }
-
 
 enum TodosViewFilter { all, activeOnly, completedOnly }
 
