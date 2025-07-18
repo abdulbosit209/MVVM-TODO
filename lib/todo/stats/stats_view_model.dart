@@ -1,4 +1,3 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:async';
 
 import 'package:equatable/equatable.dart';
@@ -78,12 +77,6 @@ final class StatsState extends Equatable {
     );
   }
 
-
   @override
-  String toString() => '''\n
-    StatsState(
-      isLoading: $isLoading, 
-      completedTodos: $completedTodos, 
-      activeTodos: $activeTodos
-    )''';
+  bool get stringify => true;
 }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:todo_project/config/locator_config.dart';
 import 'package:todo_project/core/utils/navigation/router_service.dart';
 import 'package:todo_project/core/utils/navigation/route_data.dart';
@@ -7,28 +6,43 @@ import 'package:todo_project/home/home_view_model.dart';
 import 'package:todo_project/todo/stats/stats_page.dart';
 import 'package:todo_project/todo/todos_overview/todos_overview_page.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
-
   @override
-  Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => HomeViewModel(),
-      child: const HomeView(),
-    );
-  }
+  State<HomePage> createState() => _HomePageState();
 }
 
-class HomeView extends StatelessWidget {
-  const HomeView({super.key});
+class _HomePageState extends State<HomePage> {
+
+  @override
+  void initState() {
+    super.initState();
+    registerHomeViewModel();
+  }
+
+  void registerHomeViewModel() {
+    locator.pushNewScope(
+      scopeName: 'homeViewModel',
+      init: (di) {
+        di.registerSingleton<HomeViewModel>(
+          HomeViewModel(),
+          dispose: (homeViewModel) => homeViewModel.dispose(),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final state = context.watch<HomeViewModel>().value;
     return Scaffold(
-      body: IndexedStack(
-        index: state.index,
-        children: const [TodosOverviewPage(), StatsPage()],
+      body: ValueListenableBuilder(
+        valueListenable: locator<HomeViewModel>(),
+        builder: (context, state, _) {
+          return IndexedStack(
+            index: state.index,
+            children: const [TodosOverviewPage(), StatsPage()],
+          );
+        },
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: FloatingActionButton(
@@ -39,26 +53,46 @@ class HomeView extends StatelessWidget {
         },
         child: const Icon(Icons.add),
       ),
-      bottomNavigationBar: BottomAppBar(
-        shape: const CircularNotchedRectangle(),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            _HomeTabButton(
-              onPressed: () => context.read<HomeViewModel>().setTab(HomeTab.todos),
-              groupValue: state,
-              value: HomeTab.todos,
-              icon: const Icon(Icons.list_rounded),
-            ),
-            _HomeTabButton(
-              onPressed: () => context.read<HomeViewModel>().setTab(HomeTab.stats),
-              groupValue: state,
-              value: HomeTab.stats,
-              icon: const Icon(Icons.show_chart_rounded),
-            ),
-          ],
-        ),
-      ),
+      bottomNavigationBar: _HomeBottomNavBar(),
+    );
+  }
+
+  @override
+  void dispose() {
+    locator.popScope();
+    super.dispose();
+  }
+}
+
+class _HomeBottomNavBar extends StatelessWidget {
+  const _HomeBottomNavBar();
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder(
+      valueListenable: locator<HomeViewModel>(),
+      builder: (context, state, _) {
+        return BottomAppBar(
+          shape: const CircularNotchedRectangle(),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _HomeTabButton(
+                onPressed: () => locator<HomeViewModel>().setTab(HomeTab.todos),
+                groupValue: state,
+                value: HomeTab.todos,
+                icon: const Icon(Icons.list_rounded),
+              ),
+              _HomeTabButton(
+                onPressed: () => locator<HomeViewModel>().setTab(HomeTab.stats),
+                groupValue: state,
+                value: HomeTab.stats,
+                icon: const Icon(Icons.show_chart_rounded),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

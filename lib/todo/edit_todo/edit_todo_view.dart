@@ -1,65 +1,84 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
 import 'package:todo_project/config/locator_config.dart';
 import 'package:todo_project/core/models/todo.dart';
 import 'package:todo_project/core/utils/internal_notification/notify_service.dart';
 import 'package:todo_project/todo/edit_todo/edit_todo_view_model.dart';
 import 'package:todo_project/todo/todo_repository.dart';
 
-class EditTodoPage extends StatelessWidget {
+class EditTodoPage extends StatefulWidget {
   const EditTodoPage({this.initialTodo, super.key});
 
   final Todo? initialTodo;
 
   @override
-  Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => EditTodoViewModel(
-        initialTodo: initialTodo,
-        notifyService: locator<NotifyService>(),
-        todosRepository: locator<TodosRepository>(),
-      ),
-      child: const EditTodoView(),
-    );
-  }
+  State<EditTodoPage> createState() => _EditTodoPageState();
 }
 
-class EditTodoView extends StatelessWidget {
-  const EditTodoView({super.key});
+class _EditTodoPageState extends State<EditTodoPage> {
+  
+  @override
+  void initState() {
+    super.initState();
+    registerEditTodoViewModel();
+  }
+
+  void registerEditTodoViewModel() {
+    locator.pushNewScope(
+      scopeName: 'editTodoViewModel',
+      init: (di) {
+        di.registerSingleton<EditTodoViewModel>(
+          EditTodoViewModel(
+            todosRepository: locator<TodosRepository>(),
+            initialTodo: widget.initialTodo,
+            notifyService: locator<NotifyService>(),
+          ),
+          dispose: (editTodoViewModel) => editTodoViewModel.dispose(),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final state = context.watch<EditTodoViewModel>().value;
-
-    return Scaffold(
-      appBar: AppBar(title: Text(state.isNewTodo ? 'New todo' : 'Edit todo')),
-      floatingActionButton: FloatingActionButton(
-        shape: const ContinuousRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(32)),
-        ),
-        onPressed: state.isLoading
-            ? null
-            : () => context.read<EditTodoViewModel>().onSubmitted(),
-        child: state.isLoading
-            ? const CupertinoActivityIndicator()
-            : const Icon(Icons.check_rounded),
-      ),
-      body: CupertinoScrollbar(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: EdgeInsets.all(16),
-            child: Column(
-              children: [
-                _TitleField(),
-                _DescriptionField(),
-              ],
+    return ValueListenableBuilder(
+      valueListenable: locator<EditTodoViewModel>(),
+      builder: (context, state, _) {
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(state.isNewTodo ? 'New todo' : 'Edit todo'),
+          ),
+          floatingActionButton: FloatingActionButton(
+            shape: const ContinuousRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(32)),
+            ),
+            onPressed: state.isLoading
+                ? null
+                : () => locator<EditTodoViewModel>().onSubmitted(),
+            child: state.isLoading
+                ? const CupertinoActivityIndicator()
+                : const Icon(Icons.check_rounded),
+          ),
+          body: CupertinoScrollbar(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  children: [_TitleField(), _DescriptionField()],
+                ),
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
+  }
+
+  @override
+  void dispose() {
+    locator.popScope();
+    super.dispose();
   }
 }
 
@@ -68,23 +87,26 @@ class _TitleField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final state = context.watch<EditTodoViewModel>().value;
-
-    return TextFormField(
-      key: const Key('editTodoView_title_textFormField'),
-      initialValue: state.title,
-      decoration: InputDecoration(
-        enabled: !state.isLoading,
-        labelText: 'Title',
-        hintText: state.initialTodo?.title ?? '',
-      ),
-      maxLength: 50,
-      inputFormatters: [
-        LengthLimitingTextInputFormatter(50),
-        FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9\s]')),
-      ],
-      onChanged: (title) =>
-          context.read<EditTodoViewModel>().onTitleChanged(title: title),
+    return ValueListenableBuilder(
+      valueListenable: locator<EditTodoViewModel>(),
+      builder: (context, state, _) {
+        return TextFormField(
+          key: const Key('editTodoView_title_textFormField'),
+          initialValue: state.title,
+          decoration: InputDecoration(
+            enabled: !state.isLoading,
+            labelText: 'Title',
+            hintText: state.initialTodo?.title ?? '',
+          ),
+          maxLength: 50,
+          inputFormatters: [
+            LengthLimitingTextInputFormatter(50),
+            FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9\s]')),
+          ],
+          onChanged: (title) =>
+              locator<EditTodoViewModel>().onTitleChanged(title: title),
+        );
+      },
     );
   }
 }
@@ -94,22 +116,25 @@ class _DescriptionField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final state = context.watch<EditTodoViewModel>().value;
-
-    return TextFormField(
-      key: const Key('editTodoView_description_textFormField'),
-      initialValue: state.description,
-      decoration: InputDecoration(
-        enabled: !state.isLoading,
-        labelText: 'Description',
-        hintText: state.initialTodo?.description ?? '',
-      ),
-      maxLength: 300,
-      maxLines: 7,
-      inputFormatters: [LengthLimitingTextInputFormatter(300)],
-      onChanged: (description) {
-        context.read<EditTodoViewModel>().onDescriptionChanged(
-          description: description,
+    return ValueListenableBuilder(
+      valueListenable: locator<EditTodoViewModel>(),
+      builder: (context, state, _) {
+        return TextFormField(
+          key: const Key('editTodoView_description_textFormField'),
+          initialValue: state.description,
+          decoration: InputDecoration(
+            enabled: !state.isLoading,
+            labelText: 'Description',
+            hintText: state.initialTodo?.description ?? '',
+          ),
+          maxLength: 300,
+          maxLines: 7,
+          inputFormatters: [LengthLimitingTextInputFormatter(300)],
+          onChanged: (description) {
+            locator<EditTodoViewModel>().onDescriptionChanged(
+              description: description,
+            );
+          },
         );
       },
     );
