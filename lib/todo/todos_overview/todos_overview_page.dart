@@ -4,6 +4,7 @@ import 'package:todo_project/config/locator_config.dart';
 import 'package:todo_project/core/utils/internal_notification/notify_service.dart';
 import 'package:todo_project/core/utils/navigation/router_service.dart';
 import 'package:todo_project/todo/todo_repository.dart';
+import 'package:todo_project/todo/todos_overview/todos_overview_provider.dart';
 import 'package:todo_project/todo/todos_overview/todos_overview_view_model.dart';
 import 'package:todo_project/todo/todos_overview/widgets/todo_list_tile.dart';
 import 'package:todo_project/core/utils/navigation/route_data.dart';
@@ -18,54 +19,81 @@ class TodosOverviewPage extends StatefulWidget {
 }
 
 class _TodosOverviewPageState extends State<TodosOverviewPage> {
-  void registerTodosOverviewModel() {
-    locator.pushNewScope(
-      scopeName: 'todosOverViewModel',
-      init: (di) {
-        di.registerSingleton<TodosOverviewViewModel>(
-          TodosOverviewViewModel(
-            todosRepository: locator<TodosRepository>(),
-            notifyService: locator<NotifyService>(),
-          ),
-          dispose: (todosOverviewViewModel) => todosOverviewViewModel.dispose(),
-        );
-      },
-    );
-  }
+  late final TodosOverviewViewModel todosOverviewViewModel;
 
   @override
   void initState() {
     super.initState();
-    registerTodosOverviewModel();
-
-    locator<TodosOverviewViewModel>().addListener(
-      () {
-        final state = locator<TodosOverviewViewModel>().value;
-        final deletedTodo = state.lastDeletedTodo;
-        if (state.lastDeletedTodo != null) {
-          final messenger = ScaffoldMessenger.of(context);
-          messenger
-            ..hideCurrentSnackBar()
-            ..showSnackBar(
-              SnackBar(
-                content: Text('Deleting: ${deletedTodo!.title}'),
-                action: SnackBarAction(
-                  label: 'cancel',
-                  onPressed: () {
-                    messenger.hideCurrentSnackBar();
-                    locator<TodosOverviewViewModel>()
-                        .todosOverviewUndoDeletionRequested();
-                  },
-                ),
-              ),
-            );
-        }
-      },
+    todosOverviewViewModel = TodosOverviewViewModel(
+      todosRepository: locator<TodosRepository>(),
+      notifyService: locator<NotifyService>(),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    return TodosOverviewProvider(
+      todosOverviewViewModel: todosOverviewViewModel,
+      child: _TodosOverviewView(),
+    );
+  }
+
+  @override
+  void dispose() {
+    todosOverviewViewModel.dispose();
+    super.dispose();
+  }
+}
+
+class _TodosOverviewView extends StatefulWidget {
+  const _TodosOverviewView();
+
+  @override
+  State<_TodosOverviewView> createState() => _TodosOverviewViewState();
+}
+
+class _TodosOverviewViewState extends State<_TodosOverviewView> {
+  
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final viewModel = TodosOverviewProvider.of(context).todosOverviewViewModel;
+
+    TodosOverviewState previous = viewModel.value;
+
+    viewModel.addListener(() {
+      final current = viewModel.value;
+
+      if (current.lastDeletedTodo != previous.lastDeletedTodo &&
+          current.lastDeletedTodo != null) {
+        final deleted = current.lastDeletedTodo!;
+        final messenger = ScaffoldMessenger.of(context);
+        messenger
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              content: Text('Deleting: ${deleted.title}'),
+              action: SnackBarAction(
+                label: 'cancel',
+                onPressed: () {
+                  messenger.hideCurrentSnackBar();
+                  viewModel.todosOverviewUndoDeletionRequested();
+                },
+              ),
+            ),
+          );
+      }
+
+      previous = current;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final todosOverviewProvider = TodosOverviewProvider.of(
+      context,
+    ).todosOverviewViewModel;
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Todos'),
@@ -75,7 +103,7 @@ class _TodosOverviewPageState extends State<TodosOverviewPage> {
         ],
       ),
       body: ValueListenableBuilder(
-        valueListenable: locator<TodosOverviewViewModel>(),
+        valueListenable: todosOverviewProvider,
         builder: (context, state, _) {
           return CupertinoScrollbar(
             child: ListView.builder(
@@ -85,16 +113,13 @@ class _TodosOverviewPageState extends State<TodosOverviewPage> {
                 return TodoListTile(
                   todo: todo,
                   onToggleCompleted: (isCompleted) {
-                    locator<TodosOverviewViewModel>()
-                        .todosOverviewTodoCompletionToggled(
-                          todo: todo,
-                          isCompleted: isCompleted,
-                        );
+                    todosOverviewProvider.todosOverviewTodoCompletionToggled(
+                      todo: todo,
+                      isCompleted: isCompleted,
+                    );
                   },
                   onDismissed: (_) {
-                    locator<TodosOverviewViewModel>().todosOverviewTodoDeleted(
-                      todo: todo,
-                    );
+                    todosOverviewProvider.todosOverviewTodoDeleted(todo: todo);
                   },
                   onTap: () {
                     locator<RouterService>().goTo(
@@ -108,10 +133,5 @@ class _TodosOverviewPageState extends State<TodosOverviewPage> {
         },
       ),
     );
-  }
-  @override
-  void dispose() {
-    locator.popScope();
-    super.dispose();
   }
 }

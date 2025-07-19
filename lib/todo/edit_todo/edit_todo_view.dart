@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:todo_project/config/locator_config.dart';
 import 'package:todo_project/core/models/todo.dart';
 import 'package:todo_project/core/utils/internal_notification/notify_service.dart';
+import 'package:todo_project/todo/edit_todo/edit_todo_provider.dart';
 import 'package:todo_project/todo/edit_todo/edit_todo_view_model.dart';
 import 'package:todo_project/todo/todo_repository.dart';
 
@@ -17,33 +18,41 @@ class EditTodoPage extends StatefulWidget {
 }
 
 class _EditTodoPageState extends State<EditTodoPage> {
-  
+  late final EditTodoViewModel editTodoViewModel;
+
   @override
   void initState() {
     super.initState();
-    registerEditTodoViewModel();
-  }
-
-  void registerEditTodoViewModel() {
-    locator.pushNewScope(
-      scopeName: 'editTodoViewModel',
-      init: (di) {
-        di.registerSingleton<EditTodoViewModel>(
-          EditTodoViewModel(
-            todosRepository: locator<TodosRepository>(),
-            initialTodo: widget.initialTodo,
-            notifyService: locator<NotifyService>(),
-          ),
-          dispose: (editTodoViewModel) => editTodoViewModel.dispose(),
-        );
-      },
+    editTodoViewModel = EditTodoViewModel(
+      initialTodo: widget.initialTodo,
+      notifyService: locator<NotifyService>(),
+      todosRepository: locator<TodosRepository>(),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    return EditTodoProvider(
+      editTodoViewModel: editTodoViewModel,
+      child: _EditTodoView(),
+    );
+  }
+
+  @override
+  void dispose() {
+    editTodoViewModel.dispose();
+    super.dispose();
+  }
+}
+
+class _EditTodoView extends StatelessWidget {
+  const _EditTodoView();
+
+  @override
+  Widget build(BuildContext context) {
+    final editTodoProvider = EditTodoProvider.of(context).editTodoViewModel;
     return ValueListenableBuilder(
-      valueListenable: locator<EditTodoViewModel>(),
+      valueListenable: editTodoProvider,
       builder: (context, state, _) {
         return Scaffold(
           appBar: AppBar(
@@ -55,7 +64,7 @@ class _EditTodoPageState extends State<EditTodoPage> {
             ),
             onPressed: state.isLoading
                 ? null
-                : () => locator<EditTodoViewModel>().onSubmitted(),
+                : () => editTodoProvider.onSubmitted(),
             child: state.isLoading
                 ? const CupertinoActivityIndicator()
                 : const Icon(Icons.check_rounded),
@@ -74,12 +83,6 @@ class _EditTodoPageState extends State<EditTodoPage> {
       },
     );
   }
-
-  @override
-  void dispose() {
-    locator.popScope();
-    super.dispose();
-  }
 }
 
 class _TitleField extends StatelessWidget {
@@ -87,8 +90,9 @@ class _TitleField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final editTodoProvider = EditTodoProvider.of(context).editTodoViewModel;
     return ValueListenableBuilder(
-      valueListenable: locator<EditTodoViewModel>(),
+      valueListenable: editTodoProvider,
       builder: (context, state, _) {
         return TextFormField(
           key: const Key('editTodoView_title_textFormField'),
@@ -103,8 +107,7 @@ class _TitleField extends StatelessWidget {
             LengthLimitingTextInputFormatter(50),
             FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9\s]')),
           ],
-          onChanged: (title) =>
-              locator<EditTodoViewModel>().onTitleChanged(title: title),
+          onChanged: (title) => editTodoProvider.onTitleChanged(title: title),
         );
       },
     );
@@ -116,8 +119,9 @@ class _DescriptionField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final editTodoProvider = EditTodoProvider.of(context).editTodoViewModel;
     return ValueListenableBuilder(
-      valueListenable: locator<EditTodoViewModel>(),
+      valueListenable: editTodoProvider,
       builder: (context, state, _) {
         return TextFormField(
           key: const Key('editTodoView_description_textFormField'),
@@ -131,9 +135,7 @@ class _DescriptionField extends StatelessWidget {
           maxLines: 7,
           inputFormatters: [LengthLimitingTextInputFormatter(300)],
           onChanged: (description) {
-            locator<EditTodoViewModel>().onDescriptionChanged(
-              description: description,
-            );
+            editTodoProvider.onDescriptionChanged(description: description);
           },
         );
       },

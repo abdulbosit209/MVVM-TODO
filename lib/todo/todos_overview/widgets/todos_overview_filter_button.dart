@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:todo_project/config/locator_config.dart';
+import 'package:todo_project/todo/todos_overview/todos_overview_provider.dart';
 import 'package:todo_project/todo/todos_overview/todos_overview_view_model.dart';
 
 class TodosOverviewFilterButton extends StatelessWidget {
@@ -7,8 +7,11 @@ class TodosOverviewFilterButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final todosOverviewProvider = TodosOverviewProvider.of(
+      context,
+    ).todosOverviewViewModel;
     return ValueListenableBuilder(
-      valueListenable: locator<TodosOverviewViewModel>(),
+      valueListenable: todosOverviewProvider,
       builder: (context, state, _) {
         return PopupMenuButton<TodosViewFilter>(
           shape: const ContinuousRectangleBorder(
@@ -16,7 +19,7 @@ class TodosOverviewFilterButton extends StatelessWidget {
           ),
           initialValue: state.filter,
           onSelected: (filter) {
-            locator<TodosOverviewViewModel>().todosOverviewFilterChanged(filter: filter);
+            todosOverviewProvider.todosOverviewFilterChanged(filter: filter);
           },
           itemBuilder: (context) {
             return [
@@ -33,7 +36,7 @@ class TodosOverviewFilterButton extends StatelessWidget {
           },
           icon: const Icon(Icons.filter_list_rounded),
         );
-      }
+      },
     );
   }
 }

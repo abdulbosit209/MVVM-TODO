@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:todo_project/config/locator_config.dart';
-import 'package:todo_project/todo/todos_overview/todos_overview_view_model.dart';
+import 'package:todo_project/todo/todos_overview/todos_overview_provider.dart';
 
 @visibleForTesting
 enum TodosOverviewOption { toggleAll, clearCompleted }
@@ -10,8 +9,11 @@ class TodosOverviewOptionsButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final todosOverviewProvider = TodosOverviewProvider.of(
+      context,
+    ).todosOverviewViewModel;
     return ValueListenableBuilder(
-      valueListenable: locator<TodosOverviewViewModel>(),
+      valueListenable: todosOverviewProvider,
       builder: (context, state, _) {
         final hasTodos = state.todos.isNotEmpty;
         final completedTodosAmount = state.todos
@@ -25,11 +27,9 @@ class TodosOverviewOptionsButton extends StatelessWidget {
           onSelected: (options) {
             switch (options) {
               case TodosOverviewOption.toggleAll:
-                locator<TodosOverviewViewModel>()
-                    .todosOverviewToggleAllRequested();
+                todosOverviewProvider.todosOverviewToggleAllRequested();
               case TodosOverviewOption.clearCompleted:
-                locator<TodosOverviewViewModel>()
-                    .todosOverviewClearCompletedRequested();
+                todosOverviewProvider.todosOverviewClearCompletedRequested();
             }
           },
           itemBuilder: (context) {

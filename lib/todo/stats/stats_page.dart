@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:todo_project/config/locator_config.dart';
 import 'package:todo_project/core/utils/internal_notification/notify_service.dart';
+import 'package:todo_project/todo/stats/stats_provider.dart';
 import 'package:todo_project/todo/stats/stats_view_model.dart';
 import 'package:todo_project/todo/todo_repository.dart';
 
@@ -12,35 +13,43 @@ class StatsPage extends StatefulWidget {
 }
 
 class _StatsPageState extends State<StatsPage> {
+  late final StatsViewModel statsViewModel;
 
   @override
   void initState() {
     super.initState();
-    registerStatsView();
-  }
-
-  void registerStatsView() {
-    locator.pushNewScope(
-      scopeName: 'statsViewModel',
-      init: (di) {
-        di.registerSingleton<StatsViewModel>(
-          StatsViewModel(
-            todosRepository: locator<TodosRepository>(),
-            notifyService: locator<NotifyService>(),
-          ),
-          dispose: (statsViewModel) => statsViewModel.dispose(),
-        );
-      },
+    statsViewModel = StatsViewModel(
+      todosRepository: locator<TodosRepository>(),
+      notifyService: locator<NotifyService>(),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    return StatsProvider(
+      statsViewModel: statsViewModel,
+      child: _StatsView(),
+    );
+  }
+
+  @override
+  void dispose() {
+    statsViewModel.dispose();
+    super.dispose();
+  }
+}
+
+class _StatsView extends StatelessWidget {
+  const _StatsView();
+
+  @override
+  Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final statsProvider = StatsProvider.of(context).statsViewModel;
     return Scaffold(
       appBar: AppBar(title: Text('Stats')),
       body: ValueListenableBuilder(
-        valueListenable: locator<StatsViewModel>(),
+        valueListenable: statsProvider,
         builder: (context, state, _) {
           return Column(
             children: [
@@ -64,14 +73,8 @@ class _StatsPageState extends State<StatsPage> {
               ),
             ],
           );
-        }
+        },
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    locator.popScope();
-    super.dispose();
   }
 }
